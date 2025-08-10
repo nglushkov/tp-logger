@@ -15,7 +15,7 @@ var globalLogger *zap.SugaredLogger
 // Config holds logger configuration
 type Config struct {
 	ServiceName string // Required: "scraper", "core", "matcher"
-	LogFile     string // Required: "/app/logs/file.log"
+	LogFile     string // Required: "/app/logs/service.log"
 	Environment string // Optional: defaults to "dev"
 	Version     string // Optional: defaults to "1.0.0"
 	Console     bool   // Optional: enable console output - defaults to true
@@ -39,24 +39,20 @@ func getHostname() string {
 // Init initializes the global logger with provided configuration
 func Init(cfg Config) error {
 	if cfg.ServiceName == "" {
-		return fmt.Errorf("ServiceName is required")
+		cfg.ServiceName = os.Getenv("SERVICE_NAME")
+		//return fmt.Errorf("ServiceName is required")
 	}
 	if cfg.LogFile == "" {
+		cfg.LogFile = os.Getenv("SERVICE_NAME")
 		return fmt.Errorf("LogFile is required")
 	}
 
 	// Set defaults
 	if cfg.Environment == "" {
 		cfg.Environment = os.Getenv("APP_ENV")
-		if cfg.Environment == "" {
-			cfg.Environment = "dev"
-		}
 	}
 	if cfg.Version == "" {
 		cfg.Version = os.Getenv("APP_VERSION")
-		if cfg.Version == "" {
-			cfg.Version = "1.0.0"
-		}
 	}
 
 	config := zap.NewProductionConfig()
@@ -89,6 +85,11 @@ func Init(cfg Config) error {
 		"version":  cfg.Version,
 		"trace_id": generateTraceID(),
 		"host":     getHostname(),
+	}
+
+	// Ensure log directory exists
+	if err := os.MkdirAll(fmt.Sprintf("%s/..", cfg.LogFile), 0755); err != nil {
+		return fmt.Errorf("failed to create log directory: %w", err)
 	}
 
 	logger, err := config.Build(zap.AddCallerSkip(1))
