@@ -161,68 +161,98 @@ func Printf(format string, args ...interface{}) {
 }
 
 func Println(args ...interface{}) {
+	ensureInitialized()
+
 	globalLogger.Info(args...)
 }
 
 // Fatal functions
 func Fatal(args ...interface{}) {
+	ensureInitialized()
+
 	globalLogger.Fatal(args...)
 }
 
 func Fatalf(format string, args ...interface{}) {
+	ensureInitialized()
+
 	globalLogger.Fatalf(format, args...)
 }
 
 func Fatalln(args ...interface{}) {
+	ensureInitialized()
+
 	globalLogger.Fatal(args...)
 }
 
 // Panic functions
 func Panic(args ...interface{}) {
+	ensureInitialized()
+
 	globalLogger.Panic(args...)
 }
 
 func Panicf(format string, args ...interface{}) {
+	ensureInitialized()
+
 	globalLogger.Panicf(format, args...)
 }
 
 func Panicln(args ...interface{}) {
+	ensureInitialized()
+
 	globalLogger.Panic(args...)
 }
 
 // Error functions
 func Error(args ...interface{}) {
+	ensureInitialized()
+
 	globalLogger.Error(args...)
 }
 
 func Errorf(format string, args ...interface{}) {
+	ensureInitialized()
+
 	globalLogger.Errorf(format, args...)
 }
 
 // Warn functions
 func Warn(args ...interface{}) {
+	ensureInitialized()
+
 	globalLogger.Warn(args...)
 }
 
 func Warnf(format string, args ...interface{}) {
+	ensureInitialized()
+
 	globalLogger.Warnf(format, args...)
 }
 
 // Info functions
 func Info(args ...interface{}) {
+	ensureInitialized()
+
 	globalLogger.Info(args...)
 }
 
 func Infof(format string, args ...interface{}) {
+	ensureInitialized()
+
 	globalLogger.Infof(format, args...)
 }
 
 // Debug functions
 func Debug(args ...interface{}) {
+	ensureInitialized()
+
 	globalLogger.Debug(args...)
 }
 
 func Debugf(format string, args ...interface{}) {
+	ensureInitialized()
+
 	globalLogger.Debugf(format, args...)
 }
 
@@ -233,25 +263,24 @@ func InfoStruct(msg string, keysAndValues ...interface{}) {
 }
 
 func ErrorStruct(msg string, keysAndValues ...interface{}) {
+	ensureInitialized()
+
 	globalLogger.Errorw(msg, keysAndValues...)
 }
 
 func DebugStruct(msg string, keysAndValues ...interface{}) {
+	ensureInitialized()
+
 	globalLogger.Debugw(msg, keysAndValues...)
 }
 
 func WarnStruct(msg string, keysAndValues ...interface{}) {
+	ensureInitialized()
+
 	globalLogger.Warnw(msg, keysAndValues...)
 }
 
 // Context logging - creates logger with additional fields
 func WithFields(keysAndValues ...interface{}) *zap.SugaredLogger {
 	return globalLogger.With(keysAndValues...)
-}
-
-// Sync flushes any buffered log entries
-func Sync() {
-	if globalLogger != nil {
-		globalLogger.Sync()
-	}
 }
