@@ -1,4 +1,4 @@
-package tp_logger
+package logger
 
 import (
 	"fmt"
@@ -11,14 +11,46 @@ import (
 )
 
 var globalLogger *zap.SugaredLogger
+var initialized bool
 
 // Config holds logger configuration
 type Config struct {
-	ServiceName string // Required: "scraper", "core", "matcher"
-	LogFile     string // Required: "/app/logs/service.log"
-	Environment string // Optional: defaults to "dev"
-	Version     string // Optional: defaults to "1.0.0"
+	ServiceName string // Optional: defaults to SERVICE_NAME env var
+	LogFile     string // Optional: defaults to /app/logs/{service}.log
+	Environment string // Optional: defaults to APP_ENV or "dev"
+	Version     string // Optional: defaults to APP_VERSION or "1.0.0"
 	Console     bool   // Optional: enable console output - defaults to true
+}
+
+// ensureInitialized initializes logger with defaults if not already done
+func ensureInitialized() {
+	if initialized {
+		return
+	}
+
+	// Auto-initialize with defaults
+	serviceName := os.Getenv("SERVICE_NAME")
+	if serviceName == "" {
+		serviceName = "app" // fallback
+	}
+
+	logFile := fmt.Sprintf("/app/logs/%s.log", serviceName)
+
+	config := Config{
+		ServiceName: serviceName,
+		LogFile:     logFile,
+		Console:     true,
+	}
+
+	if err := Init(config); err != nil {
+		// If init fails, create minimal console-only logger
+		zapConfig := zap.NewDevelopmentConfig()
+		zapConfig.OutputPaths = []string{"stdout"}
+		logger, _ := zapConfig.Build()
+		globalLogger = logger.Sugar()
+	}
+
+	initialized = true
 }
 
 // generateTraceID creates a unique trace ID for this session
@@ -39,26 +71,30 @@ func getHostname() string {
 // Init initializes the global logger with provided configuration
 func Init(cfg Config) error {
 	if cfg.ServiceName == "" {
-		cfg.ServiceName = os.Getenv("SERVICE_NAME")
-		//return fmt.Errorf("ServiceName is required")
+		return fmt.Errorf("ServiceName is required")
 	}
 	if cfg.LogFile == "" {
-		cfg.LogFile = os.Getenv("SERVICE_NAME")
 		return fmt.Errorf("LogFile is required")
 	}
 
 	// Set defaults
 	if cfg.Environment == "" {
 		cfg.Environment = os.Getenv("APP_ENV")
+		if cfg.Environment == "" {
+			cfg.Environment = "dev"
+		}
 	}
 	if cfg.Version == "" {
 		cfg.Version = os.Getenv("APP_VERSION")
+		if cfg.Version == "" {
+			cfg.Version = "1.0.0"
+		}
 	}
 
 	config := zap.NewProductionConfig()
 
 	// Configure output paths
-	var outputs []string
+	outputs := []string{}
 	if cfg.Console {
 		outputs = append(outputs, "stdout")
 	}
@@ -98,6 +134,7 @@ func Init(cfg Config) error {
 	}
 
 	globalLogger = logger.Sugar()
+	initialized = true
 	return nil
 }
 
@@ -112,10 +149,12 @@ func MustInit(cfg Config) {
 
 // Print functions
 func Print(args ...interface{}) {
+	ensureInitialized()
 	globalLogger.Info(args...)
 }
 
 func Printf(format string, args ...interface{}) {
+	ensureInitialized()
 	globalLogger.Infof(format, args...)
 }
 
@@ -187,6 +226,7 @@ func Debugf(format string, args ...interface{}) {
 
 // Structured logging functions
 func InfoStruct(msg string, keysAndValues ...interface{}) {
+	ensureInitialized()
 	globalLogger.Infow(msg, keysAndValues...)
 }
 
