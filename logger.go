@@ -40,7 +40,7 @@ func ensureInitialized() {
 	config := Config{
 		ServiceName: serviceName,
 		LogFile:     logFile,
-		Console:     true,
+		Console:     false,
 	}
 
 	if err := Init(config); err != nil {
