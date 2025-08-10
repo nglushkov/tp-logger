@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+	"path/filepath"
 	"time"
 
 	"go.uber.org/zap"
@@ -124,7 +125,8 @@ func Init(cfg Config) error {
 	}
 
 	// Ensure log directory exists
-	if err := os.MkdirAll(fmt.Sprintf("%s/..", cfg.LogFile), 0755); err != nil {
+	logDir := filepath.Dir(cfg.LogFile)
+	if err := os.MkdirAll(logDir, 0755); err != nil {
 		return fmt.Errorf("failed to create log directory: %w", err)
 	}
 
