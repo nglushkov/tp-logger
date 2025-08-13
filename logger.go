@@ -30,18 +30,8 @@ func ensureInitialized() {
 		return
 	}
 
-	// Auto-initialize with defaults
-	serviceName := os.Getenv("SERVICE_NAME")
-	if serviceName == "" {
-		serviceName = "app" // fallback
-	}
-
-	logFile := fmt.Sprintf("/app/logs/%s.log", serviceName)
-
 	config := Config{
-		ServiceName: serviceName,
-		LogFile:     logFile,
-		Console:     false,
+		Console: false,
 	}
 
 	if err := Init(config); err != nil {
@@ -73,10 +63,14 @@ func getHostname() string {
 // Init initializes the global logger with provided configuration
 func Init(cfg Config) error {
 	if cfg.ServiceName == "" {
-		return fmt.Errorf("ServiceName is required")
+		cfg.ServiceName = os.Getenv("SERVICE_NAME")
+		if cfg.ServiceName == "" {
+			return fmt.Errorf("SERVICE_NAME environment variable is not set")
+		}
 	}
+
 	if cfg.LogFile == "" {
-		return fmt.Errorf("LogFile is required")
+		cfg.LogFile = fmt.Sprintf("/app/logs/%s.log", cfg.ServiceName)
 	}
 
 	// Set defaults
