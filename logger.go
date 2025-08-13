@@ -16,11 +16,12 @@ var initialized bool
 
 // Config holds logger configuration
 type Config struct {
-	ServiceName string // Optional: defaults to SERVICE_NAME env var
-	LogFile     string // Optional: defaults to /app/logs/{service}.log
-	Environment string // Optional: defaults to APP_ENV or "dev"
-	Version     string // Optional: defaults to APP_VERSION or "1.0.0"
-	Console     bool   // Optional: enable console output - defaults to true
+	ServiceName      string                 // Optional: defaults to SERVICE_NAME env var
+	LogFile          string                 // Optional: defaults to /app/logs/{service}.log
+	Environment      string                 // Optional: defaults to APP_ENV or "dev"
+	Version          string                 // Optional: defaults to APP_VERSION or "1.0.0"
+	Console          bool                   // Optional: enable console output - defaults to true
+	AdditionalFields map[string]interface{} // Optional: additional fields to add to all logs
 }
 
 // ensureInitialized initializes logger with defaults if not already done
@@ -122,6 +123,12 @@ func Init(cfg Config) error {
 		"version":  cfg.Version,
 		"trace_id": generateTraceID(),
 		"host":     getHostname(),
+	}
+
+	if cfg.AdditionalFields != nil {
+		for k, v := range cfg.AdditionalFields {
+			config.InitialFields[k] = v
+		}
 	}
 
 	// Ensure log directory exists
